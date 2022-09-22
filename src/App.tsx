@@ -12,8 +12,9 @@ import { useEffect } from "react";
 function App() {
   useEffect(() => {
     const listenForEvents = async () => {
-      return await listen("message", (event: any) => {
-        console.log(event);
+      return await listen("message", (event) => {
+        // console.log(event.payload);
+        console.log(JSON.parse(event.payload as string));
       });
     };
 
@@ -22,7 +23,7 @@ function App() {
 
   return (
     <div>
-      <button onClick={() => invoke("init_socket", { S: "test" })}>test</button>
+      <button onClick={() => invoke("init_socket")}>test</button>
       <Header />
       <HashRouter>
         <Routes>

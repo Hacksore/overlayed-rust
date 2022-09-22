@@ -43,7 +43,8 @@ async fn init_socket(app: AppHandle) {
     .ok();
 
   client.handler(|e| {
-    app.emit_all("message", "{ hi: \"mom\"}").unwrap();    
+    let payload = serde_json::to_string(&e);
+    app.emit_all("message", payload.unwrap()).unwrap();    
   }).await;
 }
 
