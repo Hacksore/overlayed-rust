@@ -1,5 +1,7 @@
-use rpc_discord::{Command, DiscordIpc, DiscordIpcClient, Event, EventReceive};
+use rpc_discord::{Command, DiscordIpc, DiscordIpcClient, Event };
 use tauri::{AppHandle};
+
+use::tauri::Manager;
 
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
@@ -7,22 +9,15 @@ struct Payload {
   client_id: String,
 }
 
-
-fn handle_message(event: EventReceive) {
-  // TODO: get a ref to the app so I can use that to all app.emit_*
-  // tauri::AppHandle
-  // app.emit_all("message", "{}");
-
-  println!("{:#?}", event);
-}
+const CHANNEL_ID: &str = "1019035649870934108";
 
 #[tauri::command(async)]
 async fn init_socket(app: AppHandle) {
   // access token from env
-  let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
+  let access_token = dotenv::var("ACCESS_TOKEN").expect("Must provide access token");
 
   // client id from env
-  let client_id = dotenv::var("CLIENT_ID").unwrap();
+  let client_id = dotenv::var("CLIENT_ID").expect("Must define client id");
 
   // connect to discord client with overlayed id
   let mut client = DiscordIpcClient::new(&client_id)
@@ -38,24 +33,26 @@ async fn init_socket(app: AppHandle) {
     .ok();
 
   client
-    .emit(Event::speaking_start_event("1021507676871589939"))
+    .emit(Event::speaking_start_event(CHANNEL_ID))
     .await
     .ok();
 
   client
-    .emit(Event::speaking_stop_event("1021507676871589939"))
+    .emit(Event::speaking_stop_event(CHANNEL_ID))
     .await
     .ok();
 
-  client.handler(handle_message).await.ok();
-
-  println!("made it here");
+  client.handler(|e| {
+    app.emit_all("message", "{ hi: \"mom\"}").unwrap();    
+  }).await;
 }
 
 #[tokio::main]
 async fn main() {
   // TODO: get real auth at some point
   dotenv::dotenv().ok();
+
+  println!("CLIENT_ID: {}", dotenv::var("CLIENT_ID").unwrap());
 
   let app = tauri::Builder::default();
 
