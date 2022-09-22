@@ -1,88 +1,66 @@
-use discord_sdk as ds;
-use discord_sdk::voice::state::VoiceState;
-use ds::voice;
+use rpc_discord::{Command, DiscordIpc, DiscordIpcClient, Event, EventReceive};
+use tauri::{AppHandle};
 
-/// Application identifier for "Andy's Test App" used in the Discord SDK's
-/// examples.
-pub const APP_ID: ds::AppId = 905987126099836938;
-
-pub struct Client {
-    pub discord: ds::Discord,
-    pub user: ds::user::User,
-    pub wheel: ds::wheel::Wheel,
+// the payload type must implement `Serialize` and `Clone`.
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+  client_id: String,
 }
 
-pub async fn make_client(subs: ds::Subscriptions) -> Client {
-    println!("starting client creation...");
 
-    let (wheel, handler) = ds::wheel::Wheel::new(Box::new(|err| {
-        tracing::error!(error = ?err, "encountered an error");
-    }));
+fn handle_message(event: EventReceive) {
+  // TODO: get a ref to the app so I can use that to all app.emit_*
+  // tauri::AppHandle
+  // app.emit_all("message", "{}");
 
-    let mut user = wheel.user();
+  println!("{:#?}", event);
+}
 
-    let app = ds::DiscordApp::PlainId(APP_ID);
-    let discord = ds::Discord::new( app, subs, Box::new(handler))
-        .expect("unable to create discord client");
+#[tauri::command(async)]
+async fn init_socket(app: AppHandle) {
+  // access token from env
+  let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
 
-    println!("waiting for handshake...");
-    user.0.changed().await.unwrap();
+  // client id from env
+  let client_id = dotenv::var("CLIENT_ID").unwrap();
 
-    let user = match &*user.0.borrow() {
-        ds::wheel::UserState::Connected(user) => user.clone(),
-        ds::wheel::UserState::Disconnected(err) => panic!("failed to connect to Discord: {}", err),
-    };
+  // connect to discord client with overlayed id
+  let mut client = DiscordIpcClient::new(&client_id)
+    .await
+    .expect("Client failed to connect");
 
-    println!("connected to Discord, local user is {:#?}", user);
+  // login to the client
+  client.login(access_token).await.unwrap();
 
-    Client {
-        discord,
-        user,
-        wheel,
-    }
+  client
+    .emit(Command::get_selected_voice_channel())
+    .await
+    .ok();
+
+  client
+    .emit(Event::speaking_start_event("1021507676871589939"))
+    .await
+    .ok();
+
+  client
+    .emit(Event::speaking_stop_event("1021507676871589939"))
+    .await
+    .ok();
+
+  client.handler(handle_message).await.ok();
+
+  println!("made it here");
 }
 
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    let client = make_client(ds::Subscriptions::ALL).await;
+async fn main() {
+  // TODO: get real auth at some point
+  dotenv::dotenv().ok();
 
-    //let user = client.user;
-    let wheel = client.wheel;
+  let app = tauri::Builder::default();
 
-    let mut voice_events = wheel.voice().0;
-    let voice_state = std::sync::Arc::new(VoiceState::new());
-    let vs = voice_state.clone();
-
-    let mut activity_events = wheel.activity();
-
-    // tokio::task::spawn(async move {
-    //     while let Ok(ae) = activity_events.0.recv().await {
-    //         println!("received activity event {:?}", ae);
-    //     }
-    // });
-
-    tokio::task::spawn(async move {
-        while let Ok(ve) = voice_events.recv().await {
-            println!("Got voice event! {:?}", ve);
-            vs.on_event(ve);
-        }
-
-        // match voice_events.recv().await {
-        //     Ok() => {
-
-        //     },
-        //     Err(err) => {
-        //         println!("Something wrong happend {:?}", err);
-        //     }
-        // }
-    });
-
-    // start the app
-    tauri::Builder::default()
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-
-    // "cool rust returns"
-    Ok(())
-
+  app
+    .invoke_handler(tauri::generate_handler![init_socket])
+    .run(tauri::generate_context!())
+    .expect("error while building tauri application");
 }

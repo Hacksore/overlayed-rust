@@ -16,11 +16,13 @@ tauri-build = { version = "1.1", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.1", features = ["api-all", "macos-private-api"] }
+tauri = { version = "1.1.1", features = ["api-all", "macos-private-api"] }
 discord-sdk = "0.3.0"
 tokio = { version = "1.21.1", features = ["full"] } 
 tracing = "0.1.36"
 anyhow = "1.0.65"
+rpc-discord = { path = "../../discord-ipc-rust" }
+dotenv = "0.15.0"
 
 [features]
 # by default Tauri runs in production mode
