@@ -24,6 +24,9 @@ function App() {
   return (
     <div>
       <button onClick={() => invoke("init_socket")}>test</button>
+      <button onClick={() => invoke("init_socket",  {
+        id: 123
+      })}>Get users in current channel</button>
       <Header />
       <HashRouter>
         <Routes>
