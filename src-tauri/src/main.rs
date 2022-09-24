@@ -1,81 +1,72 @@
 use std::sync::Arc;
 
-use rpc_discord::{Command, DiscordIpc, DiscordIpcClient, Event};
-use tauri::{AppHandle, async_runtime::Mutex};
+use rpc_discord::{DiscordIpc, Event, Command, DiscordIpcClient};
+use tauri::{async_runtime::Mutex, AppHandle};
 
 use ::tauri::Manager;
 
-// the payload type must implement `Serialize` and `Clone`.
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-  client_id: String,
-}
-
 const CHANNEL_ID: &str = "1019035649870934108";
 
-// #[tauri::command(async)]
-// async fn receive_message(app: AppHandle, state: tauri::State<GameState>) {
-//   // let client = state.0.blocking_read().client;
-
-//   // client.emit();
-//   // client SELECT_VOICE_CHANNEL => { id: 1234 }
-//   // CLIENT HERE?!??!?
-
-//   // println!("{:#?}", state.0.blocking_read());
-// }
-
-// TODO: get the clietn some how
+/// send a json string
 #[tauri::command(async)]
-async fn init_socket(app: AppHandle) {
-  // access token from env
-  // let access_token = dotenv::var("ACCESS_TOKEN").expect("Must provide access token");
+async fn send_to_discord(app: AppHandle, payload: String) {
+  println!("Got a payload from client: {payload}");
 
-  // // login to the client
-  // client.login(access_token).await.unwrap();
-
-  // client
-  //   .emit(Command::get_selected_voice_channel())
-  //   .await
-  //   .ok();
-
-  // client
-  //   .emit(Event::speaking_start_event(CHANNEL_ID))
-  //   .await
-  //   .ok();
-
-  // client
-  //   .emit(Event::speaking_stop_event(CHANNEL_ID))
-  //   .await
-  //   .ok();
+  // get client
+  if let Some(cl) = app.try_state::<RpcMutex>() {
+    let mut client = cl.lock().await;
+    println!("from send_to_discord {}", payload);
+    client.emit(payload).await.ok();
+  } else {
+    println!("can't get client");
+  }
 }
 
 pub type RpcMutex = Arc<Mutex<DiscordIpcClient>>;
 
-// pub fn init() -> TauriPlugin<Wry> {
-//   Builder::new("tauri-plugin-startup")
-//       .invoke_handler(tauri::generate_handler![get_startup_progress])
-//       .on_event(|app_handle, event| {
-//           if let RunEvent::Ready = event {
-//               app_handle.manage(StartupProgressText(std::sync::Mutex::new(
-//                   "Running startup tasks...".to_string(),
-//               )));
+// TODO: get the client some how
+#[tauri::command(async)]
+async fn init_socket(app: AppHandle) {
+  println!("init socket");
 
-//               // Don't block the main thread
-//               tauri::async_runtime::spawn(run_and_check_backend(app_handle.clone()));
+  // is able to get the client without issues
+  if let Some(cl) = app.try_state::<RpcMutex>() {
+    let mut client = cl.lock().await;
 
-//               // Keep system tray stats updated
-//               let app_handle = app_handle.clone();
-//               tauri::async_runtime::spawn(async move {
-//                   let mut interval = time::interval(Duration::from_secs(TRAY_UPDATE_INTERVAL_S));
-//                   loop {
-//                       update_tray_menu(&app_handle).await;
-//                       interval.tick().await;
-//                   }
-//               });
-//           }
-//       })
-//       .build()
-// }
+    // access token from env
+    let access_token = dotenv::var("ACCESS_TOKEN").expect("Must provide access token");
+
+    // login to the client
+    client.login(access_token).await.unwrap();
+
+    client
+      .emit(Command::get_selected_voice_channel())
+      .await
+      .ok();
+
+    client
+      .emit(Event::speaking_start_event(CHANNEL_ID))
+      .await
+      .ok();
+
+    client
+      .emit(Event::speaking_stop_event(CHANNEL_ID))
+      .await
+      .ok();
+    
+    // sub to all events to via this listener
+    // TODO: CURRENTLY THIS IS BLOCKING US FROM SENDING TO THE CLIENT CAUSE IT BLOCKS THE MAINTHREAD
+    client.handler(|e| {
+      let json_string = serde_json::to_string(&e).unwrap();      
+      app.emit_all("message", json_string).ok();
+
+    }).await;
+
+
+  } else {
+    println!("Client not found")
+  }
+}
 
 #[tokio::main]
 async fn main() {
@@ -87,32 +78,20 @@ async fn main() {
   let client_id = dotenv::var("CLIENT_ID").expect("Must define client id");
 
   // connect to discord client with overlayed id
-  let mut client = DiscordIpcClient::new(&client_id)
+  let client = DiscordIpcClient::new(&client_id)
     .await
     .expect("Client failed to connect");
 
   let app = tauri::Builder::default();
 
   app
-    .invoke_handler(tauri::generate_handler![init_socket])
+    .invoke_handler(tauri::generate_handler![init_socket, send_to_discord])
     .setup(|app| {
       let app_handle = app.handle();
       let client_mutex = RpcMutex::new(Mutex::new(client));
-      app_handle.manage(client_mutex.clone());
 
-      tokio::spawn(async {
-        // do the client handle here
-        let mut client = client_mutex.lock().await;
-        client
-          .handler(|e| {
-            let payload = serde_json::to_string(&e);
-            // app.emit_all("message", payload.unwrap()).unwrap();
-          })
-          .await;
-        // println!("test");
-      });
-
-  
+      // adds the ref to tauri state
+      app_handle.manage(client_mutex);
 
       Ok(())
     })

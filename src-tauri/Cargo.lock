@@ -2253,7 +2253,7 @@ dependencies = [
 
 [[package]]
 name = "rpc-discord"
-version = "0.0.1-alpha.3"
+version = "0.0.1-alpha.2"
 dependencies = [
  "async-trait",
  "dotenv",

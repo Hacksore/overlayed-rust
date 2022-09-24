@@ -1,9 +1,24 @@
 export default function Header() {
   return (
-    <h2 
-      data-tauri-drag-region 
-      style={{ padding: "6px 10px 6px 10px", background: "#000", color: "#fff" }}>
-      Overlayed
-    </h2>
+    <div
+      data-tauri-drag-region
+      style={{
+        padding: "0 0 0 0",
+        background: "#000",
+        color: "#fff",
+        userSelect: "none",
+      }}
+    >
+      <h3
+        data-tauri-drag-region
+        style={{
+          padding: "2px 0 2px 0",
+          cursor: "default",
+          userSelect: "none",
+        }}
+      >
+        Overlayed
+      </h3>
+    </div>
   );
 }
