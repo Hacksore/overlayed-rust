@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
 
 export default function Main() {
-
+  
   useEffect(() => {
     const listenForEvents = async () => {
       return await listen("message", (event) => {
@@ -15,17 +15,17 @@ export default function Main() {
   }, []);
 
   return (
-    <div>
-      <button onClick={() => invoke("init_socket")}>Init Socket</button>
+    <div className="bg-gray-500 p-2">
       <button
+        className="bg-gray-100 m-2 p-2"
         onClick={() => {
-          invoke("send_to_discord", { payload: JSON.stringify({ cmd: "GET_SELECTED_VOICE_CHANNEL", nonce: "ligma" }) })
+          // packet: "{\"cmd\":\"GET_SELECTED_VOICE_CHANNEL\",\"evt\":null,\"nonce\":\"82862f0c-7c0d-46f1-85cf-4b2bb4015dcb\"}"
+          invoke("send_to_discord", { payload: JSON.stringify({ cmd: "GET_SELECTED_VOICE_CHANNEL", evt: null, nonce: "ligma" }) })
         }}
       >
-        Send data
+        GET_SELECTED_VOICE_CHANNEL
       </button>
       
-      <h2>Overlayed test?</h2>
     </div>
   );
 }
