@@ -8,7 +8,7 @@ use tauri::{async_runtime::Mutex};
 use ::tauri::Manager;
 use rpc::RpcMutex;
 
-pub const CHANNEL_ID: &str = "1019035649870934108";
+pub const CHANNEL_ID: &str = "1022132922565804062";
 
 #[tokio::main]
 async fn main() {
@@ -26,15 +26,22 @@ async fn main() {
 
   let app = tauri::Builder::default();
 
+
   app
     .plugin(plugin::startup::init())
-    .invoke_handler(tauri::generate_handler![command::send_to_discord])
+    .invoke_handler(tauri::generate_handler![
+      command::send_to_discord
+    ])
     .setup(|app| {
       let app_handle = app.handle();
       let client_mutex = RpcMutex::new(Mutex::new(client));
 
       // adds the ref to tauri state
       app_handle.manage(client_mutex);
+
+      // dev tools
+      let window = app.get_window("main").unwrap();
+      window.open_devtools();
 
       Ok(())
     })

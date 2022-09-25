@@ -1,10 +1,12 @@
-use rpc_discord::{Command, DiscordIpc, Event};
+use rpc_discord::{DiscordIpc};
 use tauri::{
   plugin::{Builder, TauriPlugin},
   AppHandle, RunEvent, Wry,
 };
 
-use crate::{rpc::RpcMutex, CHANNEL_ID};
+use log::{info};
+
+use crate::{rpc::RpcMutex};
 use ::tauri::Manager;
 
 pub fn init() -> TauriPlugin<Wry> {
@@ -21,7 +23,7 @@ pub fn init() -> TauriPlugin<Wry> {
 }
 
 async fn run_rpc_thread(app: AppHandle) {
-  println!("Start tokie thread");
+  info!("Start thread for RPC");
 
   tauri::async_runtime::spawn(async move {
     // is able to get the client without issues
@@ -34,26 +36,14 @@ async fn run_rpc_thread(app: AppHandle) {
       // login to the client
       client.login(access_token).await.unwrap();
 
+      // start getting messages from discord socket
+      let app_clone = app.app_handle();
       client
-        .emit(Command::get_selected_voice_channel())
-        .await
-        .ok();
+        .handler(move |event| {
+          let json_string = serde_json::to_string(&event).unwrap();         
 
-      client
-        .emit(Event::speaking_start_event(CHANNEL_ID))
-        .await
-        .ok();
-
-      client
-        .emit(Event::speaking_stop_event(CHANNEL_ID))
-        .await
-        .ok();
-
-      println!("Found cl and staring thread");
-      client
-        .handler(|e| {
-          let json_string = serde_json::to_string(&e).unwrap();
-          app.emit_all("message", json_string).ok();
+          // send to front end
+          app_clone.emit_all("message", json_string).ok();
         })
         .await;
 

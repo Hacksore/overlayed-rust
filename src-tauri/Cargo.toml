@@ -23,6 +23,7 @@ tracing = "0.1.36"
 anyhow = "1.0.65"
 rpc-discord = { path = "../../discord-ipc-rust" }
 dotenv = "0.15.0"
+log = "0.4.17"
 
 [features]
 # by default Tauri runs in production mode
