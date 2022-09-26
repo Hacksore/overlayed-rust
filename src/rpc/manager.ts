@@ -26,20 +26,17 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
   constructor() {
     super();
     console.log("Created the IPCManager instance");
-
-    // init the listener
-    this.init();
-
-    // always sub to voice channel change event
-    this.send(voiceChannelSelect());
-    this.send(getSelectedChannel());
   }
 
   /**
    * Setup the tauri IPC socket
    */
   async init() {
+
     await tauriListen("message", this.onMessage.bind(this));
+
+    this.send(voiceChannelSelect());
+    this.send(getSelectedChannel());
   }
 
   /**
@@ -48,18 +45,26 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
    */
   private onMessage(event: any) {
     const payload = JSON.parse(event.payload);
-    console.log("debug", payload);
+    // console.log("debug", payload);
 
     if (payload.cmd === RPCCommand.GET_SELECTED_VOICE_CHANNEL) {
+      // TODO: this goes in store 
       this.currentChannelId = null;
 
-      // sub to channels events
+      // sub to channels events - do we always want to do this????
       this.channelEvents(RPCCommand.SUBSCRIBE, payload.data.id);
+
+      // send user list
+      this.emit("users-list", payload.data);
+
     }
 
-    // setTimeout(() => this.emit("message", payload), 10);
+    if (payload.evt === RPCEvent.SPEAKING_START || payload.evt === RPCEvent.SPEAKING_STOP) {
+      this.emit("speaking", payload.data);
+    }
   }
 
+  // TODO: type
   private send(payload: any) {
     invoke("send_to_discord", {
       payload: JSON.stringify({

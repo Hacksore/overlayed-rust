@@ -3,7 +3,7 @@ import Header from "./components/header";
 import Main from "./views/main/main";
 
 // load socket service
-import "./rpc/manager";
+// import "./rpc/manager";
 
 function App() {
   return (

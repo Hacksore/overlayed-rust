@@ -26,7 +26,6 @@ async fn main() {
 
   let app = tauri::Builder::default();
 
-
   app
     .plugin(plugin::startup::init())
     .invoke_handler(tauri::generate_handler![
