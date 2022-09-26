@@ -4,6 +4,7 @@ import * as uuid from "uuid";
 import { listen as tauriListen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api";
 import { EventEmitter } from "events";
+import { IDiscordUser } from "../types/user";
 
 /**
  * Collection of events that are needed to sub to for voice states
@@ -60,7 +61,7 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
     }
 
     if (payload.evt === RPCEvent.SPEAKING_START || payload.evt === RPCEvent.SPEAKING_STOP) {
-      this.emit("speaking", payload.data);
+      this.emit("speaking", payload.data as IDiscordUser);
     }
   }
 

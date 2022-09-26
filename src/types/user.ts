@@ -1,3 +1,14 @@
+// interface User {
+//   nick: string;
+//   id: string;
+//   talking: boolean;
+//   avatarHash: string;
+//   muted: boolean;
+//   deafend: boolean;
+//   selfMuted: boolean;
+//   selfDeafend: boolean;
+// }
+
 // User object
 export interface IUser {
   /**
@@ -44,4 +55,48 @@ export interface IUser {
    * @property {boolean} selfMuted - flag to indicate if the user is self muted
    */
   selfMuted: boolean;
+}
+
+export interface IChannelJoin {
+  id: string;
+  name: string;
+  type: number;
+  topic: string;
+  bitrate: number;
+  user_limit: number;
+  guild_id: string;
+  position: number;
+  voice_states: VoiceState[];
+}
+
+export interface IDiscordUser {
+  nick: string;
+  mute: boolean;
+  volume: number;
+  pan: Pan;
+  voice_state: IVoiceState;
+  user: User;
+}
+
+interface Pan {
+  left: number;
+  right: number;
+}
+
+export interface IVoiceState {
+  mute: boolean; // TBD
+  deaf: boolean; // TBD
+  self_mute: boolean;
+  self_deaf: boolean;
+  suppress: boolean; // maybe its a channel where you dont have perms to talk in aka suppress
+}
+
+interface User {
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar: string;
+  bot: boolean;
+  flags: number;
+  premium_type: number;
 }

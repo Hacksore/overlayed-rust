@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useStore } from "zustand";
 import ipcManager from "../../rpc/manager";
+import { useAppStore } from "../../store";
 
 const useUserSpeaking = () => {
   const handleSpeaking = (event: any) => {
@@ -12,30 +14,29 @@ const useUserSpeaking = () => {
 };
 
 const useUserList = () => {
-  const handleSpeaking = (event: any) => {
-    console.log("users", event);
+  const { setUsers } = useAppStore()
+  const handleUsersList = (event: any) => {
+    setUsers(event);
   };
 
   useEffect(() => {
     console.log("Creating useUserList...");
-    ipcManager.on("users-list", handleSpeaking);
+    ipcManager.on("users-list", handleUsersList);
   }, []);
 };
 
 export default function Main() {
-  const [users, setUsers] = useState(null);
+  const { users } = useAppStore()
 
-  //store here
+  // store here
   useEffect(() => {
     const init = async () => {
-      console.log("Creating listener...");
       // init some default shit
       ipcManager.init();
     };
 
     init();
   }, []);
-
 
   // handle speaking state
   useUserSpeaking();
