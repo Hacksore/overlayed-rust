@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
-import { useStore } from "zustand";
+import { useEffect } from "react";
+import Avatar from "../../components/avatar";
 import ipcManager from "../../rpc/manager";
 import { useAppStore } from "../../store";
+import { IUser } from "../../types/user";
 
 const useUserSpeaking = () => {
+  const { setTalking } = useAppStore();
+
   const handleSpeaking = (event: any) => {
-    console.log("e", event);
+    console.log(event);
+    setTalking(event.id, event.state);
   };
 
   useEffect(() => {
@@ -14,7 +18,7 @@ const useUserSpeaking = () => {
 };
 
 const useUserList = () => {
-  const { setUsers } = useAppStore()
+  const { setUsers } = useAppStore();
   const handleUsersList = (event: any) => {
     setUsers(event);
   };
@@ -26,7 +30,7 @@ const useUserList = () => {
 };
 
 export default function Main() {
-  const { users } = useAppStore()
+  const { users } = useAppStore();
 
   // store here
   useEffect(() => {
@@ -44,5 +48,11 @@ export default function Main() {
   // handle user list state
   useUserList();
 
-  return <div className="bg-gray-500 p-2">{JSON.stringify(users)}</div>;
+  return (
+    <div className="bg-gray-500 p-2">
+      {Object.entries<IUser>(users).map(([id, item]) => (
+        <Avatar key={id} username={item.username} isTalking={item.talking}/>
+      ))}
+    </div>
+  );
 }

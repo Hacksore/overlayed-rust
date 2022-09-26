@@ -1,14 +1,3 @@
-// interface User {
-//   nick: string;
-//   id: string;
-//   talking: boolean;
-//   avatarHash: string;
-//   muted: boolean;
-//   deafend: boolean;
-//   selfMuted: boolean;
-//   selfDeafend: boolean;
-// }
-
 // User object
 export interface IUser {
   /**
@@ -55,18 +44,57 @@ export interface IUser {
    * @property {boolean} selfMuted - flag to indicate if the user is self muted
    */
   selfMuted: boolean;
+
+  /**
+   * @property {number} volume - level to indicate the users volume you have set
+   */
+  volume: number;
+
+  /**
+   * @property {boolean} bot - is a bot?
+   */
+  bot: boolean;
+
+  /**
+   * @property {number} bot - premium level
+   */
+  premium?: number | null;
+
+  /**
+   * @property {number} flags - flags?
+   */
+  flags: number;
+
+  /**
+   * @property {string} discriminator - discriminator like #1234
+   */
+  discriminator: string;
+
+  /**
+   * @property {number} lastUpdate - when we last updated the user ob
+   */
+  lastUpdate: number;
 }
 
-export interface IChannelJoin {
-  id: string;
-  name: string;
-  type: number;
-  topic: string;
-  bitrate: number;
-  user_limit: number;
-  guild_id: string;
-  position: number;
-  voice_states: VoiceState[];
+export interface IVoiceStateData {
+  nick: string,
+  mute: boolean,
+  volume: number,
+  pan: Pan,
+  voice_state: VoiceState,
+  user: User,
+}
+export interface IChannelJoinEvent {
+  id: string,
+  name: string,
+  type: number,
+  topic: string,
+  bitrate: number,
+  user_limit: string,
+  guild_id: string,
+  position: number,
+  messages: any,
+  voice_states: IVoiceStateData[]
 }
 
 export interface IDiscordUser {
@@ -74,7 +102,7 @@ export interface IDiscordUser {
   mute: boolean;
   volume: number;
   pan: Pan;
-  voice_state: IVoiceState;
+  voice_state: VoiceState;
   user: User;
 }
 
@@ -83,7 +111,7 @@ interface Pan {
   right: number;
 }
 
-export interface IVoiceState {
+interface VoiceState {
   mute: boolean; // TBD
   deaf: boolean; // TBD
   self_mute: boolean;
@@ -96,7 +124,8 @@ interface User {
   username: string;
   discriminator: string;
   avatar: string;
+  avatar_decoration?: string | null;
   bot: boolean;
   flags: number;
-  premium_type: number;
+  premium_type?: number | null;
 }

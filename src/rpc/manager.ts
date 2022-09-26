@@ -49,9 +49,8 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
     // console.log("debug", payload);
 
     if (payload.cmd === RPCCommand.GET_SELECTED_VOICE_CHANNEL) {
-      // TODO: this goes in store 
-      this.currentChannelId = null;
-
+      // console.log(payload);      
+      
       // sub to channels events - do we always want to do this????
       this.channelEvents(RPCCommand.SUBSCRIBE, payload.data.id);
 
@@ -61,7 +60,10 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
     }
 
     if (payload.evt === RPCEvent.SPEAKING_START || payload.evt === RPCEvent.SPEAKING_STOP) {
-      this.emit("speaking", payload.data as IDiscordUser);
+      this.emit("speaking", {
+        id: `${payload.data.channel_id}`,
+        state: payload.evt === RPCEvent.SPEAKING_START
+      });
     }
   }
 

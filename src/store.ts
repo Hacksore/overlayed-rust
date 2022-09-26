@@ -1,9 +1,10 @@
 import create from "zustand";
 import { devtools } from "zustand/middleware";
-import { IChannelJoin, IDiscordUser, IUser } from "./types/user";
+import { IChannelJoinEvent, IDiscordUser, IUser } from "./types/user";
 
-const createUserStateItem = (payload: IDiscordUser) =>
-  ({
+// TODO: move this?
+const createUserStateItem = (payload: IDiscordUser) => {
+  const data = {
     username: payload.nick,
     avatarHash: payload.user.avatar,
     muted: payload.mute,
@@ -13,7 +14,16 @@ const createUserStateItem = (payload: IDiscordUser) =>
     suppress: payload.voice_state.suppress,
     talking: false,
     id: payload.user.id,
-  } as IUser);
+    volume: payload.volume,
+    bot: payload.user.bot,
+    flags: payload.user.flags,
+    premium: payload.user.premium_type,
+    discriminator: payload.user.discriminator,
+    lastUpdate: 0,
+  };
+
+  return data;
+};
 
 interface AppState {
   users: Record<string, IUser>;
@@ -22,7 +32,7 @@ interface AppState {
 }
 
 type FSetTalkingParams = (id: string, voiceState: boolean) => void;
-type FSetUsers = (users: IChannelJoin[]) => void;
+type FSetUsers = (users: IChannelJoinEvent) => void;
 
 export const useAppStore = create<AppState>()(
   devtools((set) => ({
@@ -30,22 +40,29 @@ export const useAppStore = create<AppState>()(
     setTalking: (id, voiceState) =>
       set((state) => {
         // toggle state
-        state.users[id].talking = voiceState;
+
+        const clonedState = {...state.users}
+        console.log(id, voiceState, clonedState)
+        clonedState[id].talking = voiceState;
 
         // is this expensive?????
-        return {
-          users: state.users,
-        };
+        return state;
       }),
-    setUsers: (users) =>
+    setUsers: (event) =>
       set((state) => {
-           
-        
-        users .map((user) => createUserStateItem(user));
+        // empty obj
+        const newUsers: Record<string, IUser> = {};
 
-        // is this expensive?????
+        // create new user object with changed names
+        const usersArray = event.voice_states.map((user) => createUserStateItem(user));
+
+        // iterate over the users and create entry
+        for (const user of usersArray) {
+          newUsers[`${user.id}`] = user;
+        }
+
         return {
-          users: state.users,
+          users: newUsers,
         };
       }),
   }))

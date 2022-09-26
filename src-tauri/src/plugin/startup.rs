@@ -42,6 +42,7 @@ async fn run_rpc_thread(app: AppHandle) {
         .handler(move |event| {
           let json_string = serde_json::to_string(&event).unwrap();         
 
+          println!("[RUST]: {json_string}");
           // send to front end
           app_clone.emit_all("message", json_string).ok();
         })
