@@ -8,8 +8,7 @@ const useUserSpeaking = () => {
   const { setTalking } = useAppStore();
 
   const handleSpeaking = (event: any) => {
-    console.log(event);
-    setTalking(event.id, event.state);
+    setTalking(event.id, event.talking);
   };
 
   useEffect(() => {
@@ -24,8 +23,31 @@ const useUserList = () => {
   };
 
   useEffect(() => {
-    console.log("Creating useUserList...");
     ipcManager.on("users-list", handleUsersList);
+  }, []);
+};
+
+const useUserChannelStates = () => {
+  const { removeUser } = useAppStore();
+  const handleUserChannelDelete = (id: string) => {
+    console.log("remove user", id);
+    removeUser(id);
+  };
+
+  useEffect(() => {
+    ipcManager.on("user-voice-delete", handleUserChannelDelete);
+  }, []);
+};
+
+const useUserJoinChannel = () => {
+  const { setCurrentChannel } = useAppStore();
+  const handleUserChannelJoin = (channelData: any) => {
+    console.log("channel user", channelData);
+    setCurrentChannel(channelData);
+  };
+
+  useEffect(() => {
+    ipcManager.on("voice-channel-select", handleUserChannelJoin);
   }, []);
 };
 
@@ -34,24 +56,26 @@ export default function Main() {
 
   // store here
   useEffect(() => {
-    const init = async () => {
-      // init some default shit
-      ipcManager.init();
-    };
-
-    init();
+    ipcManager.init();
   }, []);
 
+  // TODO: maybe it makes sense to move all the hook into one?
   // handle speaking state
   useUserSpeaking();
 
   // handle user list state
   useUserList();
 
+  // handle delete user
+  useUserChannelStates();
+
+  // on user choining a channel
+  useUserJoinChannel();
+
   return (
-    <div className="bg-gray-500 p-2">
+    <div className="p-2">
       {Object.entries<IUser>(users).map(([id, item]) => (
-        <Avatar key={id} username={item.username} isTalking={item.talking}/>
+        <Avatar key={id} username={item.username} isTalking={item.talking} />
       ))}
     </div>
   );

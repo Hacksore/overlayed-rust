@@ -61,10 +61,23 @@ class IPCManager extends EventEmitter { // TODO: do i want an event listener her
 
     if (payload.evt === RPCEvent.SPEAKING_START || payload.evt === RPCEvent.SPEAKING_STOP) {
       this.emit("speaking", {
-        id: `${payload.data.channel_id}`,
-        state: payload.evt === RPCEvent.SPEAKING_START
+        id: `${payload.data.user_id}`,
+        talking: payload.evt === RPCEvent.SPEAKING_START
       });
     }
+
+    if (payload.evt === RPCEvent.VOICE_STATE_DELETE) {
+      this.emit("user-voice-delete", {
+        id: `${payload.data.user.id}`,
+      });
+    }
+
+    if (payload.evt === RPCEvent.VOICE_CHANNEL_SELECT) {
+      this.emit("voice-channel-select", {
+        id: `${payload.channel_id}`,
+      });
+    }
+
   }
 
   // TODO: type
