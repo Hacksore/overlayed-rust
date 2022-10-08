@@ -17,10 +17,11 @@ async fn main() {
 
   println!("CLIENT_ID: {}", dotenv::var("CLIENT_ID").unwrap());
   // client id from env
-  let client_id = dotenv::var("CLIENT_ID").expect("Must define client id");
+  let access_token = dotenv::var("ACCESS_TOKEN").expect("Must define client id");
+  let client_id = dotenv::var("CLIENT_ID").expect("Must define access id");
 
   // connect to discord client with overlayed id
-  let client = DiscordIpcClient::new(&client_id)
+  let client = DiscordIpcClient::new(&client_id, &access_token)
     .await
     .expect("Client failed to connect");
 

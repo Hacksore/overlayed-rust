@@ -1,4 +1,3 @@
-use rpc_discord::{DiscordIpc};
 use tauri::{
   plugin::{Builder, TauriPlugin},
   AppHandle, RunEvent, Wry,
@@ -30,11 +29,8 @@ async fn run_rpc_thread(app: AppHandle) {
     if let Some(cl) = app.try_state::<RpcMutex>() {
       let mut client = cl.lock().await;
 
-      // access token from env
-      let access_token = dotenv::var("ACCESS_TOKEN").expect("Must provide access token");
-
       // login to the client
-      client.login(access_token).await.unwrap();
+      client.login().await.unwrap();
 
       // start getting messages from discord socket
       let app_clone = app.app_handle();
